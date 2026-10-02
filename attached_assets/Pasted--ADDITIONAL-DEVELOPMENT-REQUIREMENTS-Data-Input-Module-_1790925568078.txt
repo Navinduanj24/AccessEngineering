@@ -1,0 +1,1449 @@
+# ADDITIONAL DEVELOPMENT REQUIREMENTS
+
+## Data Input Module + PDF Report Generation Module
+
+Implement the following two modules as first-class modules of the **Concrete Delivery Operations Intelligence System**.
+
+These modules must be fully integrated with the existing delivery database, dashboard, analytics, projects, fleet, alerts, and authentication system.
+
+The application must have **one source of truth for delivery data**. Data entered through the Data Input Module must immediately become available to the dashboard, analytics, alerts, and PDF reporting modules.
+
+---
+
+# MODULE 1: DATA INPUT & DELIVERY RECORDING
+
+## 1. Purpose
+
+Build a professional **Data Input & Delivery Recording Module** that allows authorized plant staff to create, update, and manage concrete delivery records.
+
+The module should represent the actual operational workflow of a ready-mix concrete delivery:
+
+**Order → Scheduling → Batching/Loading → Departure → Transit → Site Arrival → Waiting → Unloading → Completion**
+
+The objective is to capture enough information to determine:
+
+* Whether the delivery was on time
+* How late it was
+* Where the delay occurred
+* Why the delay occurred
+* How long each operational stage took
+* Which projects experience recurring delays
+* Which trucks experience recurring operational issues
+* Whether delays are concentrated at the plant, during transit, or at the customer site
+
+Do not design this as a generic CRUD form. It should feel like a dedicated operational data-entry system for a concrete plant.
+
+---
+
+# 2. Data Input Navigation
+
+Add a primary navigation item:
+
+**Data Input**
+
+Under this module provide:
+
+* New Delivery
+* Active Deliveries
+* Delivery Records
+* Draft Records
+* Recently Added
+
+The main action should be visually prominent:
+
+**+ New Delivery**
+
+---
+
+# 3. New Delivery Interface
+
+Create a dedicated delivery-entry screen.
+
+Do not put every field into one overwhelming form.
+
+Organize the form into logical sections or a multi-step workflow.
+
+Recommended workflow:
+
+```text
+1. ORDER
+     ↓
+2. SCHEDULE
+     ↓
+3. OPERATION
+     ↓
+4. DELAY
+     ↓
+5. REVIEW
+     ↓
+6. SAVE
+```
+
+Provide:
+
+* Back
+* Next
+* Save Draft
+* Cancel
+* Save Delivery
+
+The user's progress should be clearly visible.
+
+---
+
+# 4. STEP 1: ORDER INFORMATION
+
+Create an **Order Information** section.
+
+Fields:
+
+### Order ID
+
+Required.
+
+Must be unique.
+
+### Delivery Date
+
+Required.
+
+### Project
+
+Dropdown populated from the Projects database.
+
+Allow authorized users to add a new project if necessary.
+
+### Customer
+
+Dropdown.
+
+### Concrete Grade
+
+Dropdown.
+
+Examples:
+
+* Grade 20
+* Grade 25
+* Grade 30
+* Grade 35
+* Grade 40
+
+Do not hardcode these values throughout the application. Maintain them through configuration.
+
+### Quantity
+
+Unit:
+
+**m³**
+
+Validation:
+
+* Must be greater than 0
+* Do not allow negative values
+
+### Truck / Mixer ID
+
+Select from registered fleet vehicles.
+
+Display useful information after selection:
+
+```text
+Mixer: MIX-07
+Registration: ABC-1234
+Capacity: 7 m³
+Status: Available
+```
+
+---
+
+# 5. STEP 2: PLANNED SCHEDULE
+
+Create a **Planned Schedule** section.
+
+Fields:
+
+* Estimated departure time
+* Estimated delivery time
+
+Optionally:
+
+* Planned loading start
+* Planned loading duration
+* Planned transit duration
+
+The system should use the estimated delivery time as the primary baseline for delivery-delay calculations.
+
+Example:
+
+```text
+Estimated Departure: 08:30
+Estimated Delivery: 09:15
+```
+
+---
+
+# 6. STEP 3: ACTUAL OPERATION
+
+Create an **Actual Operation** section.
+
+Capture the complete delivery lifecycle.
+
+Fields:
+
+### Plant Operations
+
+* Loading started
+* Loading completed
+* Actual departure
+
+### Transit
+
+* Site arrival
+
+### Site Operations
+
+* Unloading started
+* Unloading completed
+* Actual delivery/completion time
+
+The system should automatically calculate:
+
+### Loading Duration
+
+```text
+Loading Completed - Loading Started
+```
+
+### Transit Duration
+
+```text
+Site Arrival - Actual Departure
+```
+
+### Site Waiting Time
+
+```text
+Unloading Started - Site Arrival
+```
+
+### Unloading Duration
+
+```text
+Unloading Completed - Unloading Started
+```
+
+### Total Delivery Cycle
+
+```text
+Actual Completion - Loading Started
+```
+
+### Delivery Delay
+
+```text
+Actual Delivery - Estimated Delivery
+```
+
+Do not require operators to manually calculate these values.
+
+---
+
+# 7. Automatic Delivery Status
+
+Based on the entered information, automatically determine the delivery status.
+
+Possible states:
+
+* Scheduled
+* Loading
+* Ready
+* Departed
+* In Transit
+* At Site
+* Waiting
+* Unloading
+* Completed
+* Delayed
+* Cancelled
+
+The status should update according to operational events.
+
+For example:
+
+If:
+
+```text
+Actual Departure exists
+Site Arrival does not exist
+```
+
+status can become:
+
+**In Transit**
+
+If:
+
+```text
+Site Arrival exists
+Unloading Start does not exist
+```
+
+status:
+
+**Waiting**
+
+If:
+
+```text
+Unloading Completed exists
+```
+
+status:
+
+**Completed**
+
+Allow authorized users to manually override status where necessary, but record the override in the audit log.
+
+---
+
+# 8. AUTOMATIC DELAY CALCULATION
+
+This is a core feature.
+
+Calculate:
+
+```text
+Delivery Delay =
+Actual Delivery Time - Estimated Delivery Time
+```
+
+Example:
+
+```text
+Estimated Delivery: 10:30 AM
+Actual Delivery:    10:52 AM
+
+Delivery Delay:     +22 minutes
+```
+
+Display the result prominently.
+
+Example:
+
+**22 min late**
+
+If the delivery arrives early:
+
+**8 min early**
+
+If exactly on time:
+
+**On time**
+
+Do not display negative delays confusingly.
+
+Convert the underlying calculation into a human-readable operational status.
+
+---
+
+# 9. Delay Classification
+
+Automatically classify delivery performance.
+
+Default configuration:
+
+```text
+≤ 0 minutes
+ON TIME
+
+1-15 minutes
+SLIGHT DELAY
+
+16-30 minutes
+DELAYED
+
+31+ minutes
+SEVERE DELAY
+```
+
+These values must be configurable through Settings.
+
+Do not hardcode the thresholds in multiple components.
+
+---
+
+# 10. STEP 4: DELAY INFORMATION
+
+If a delivery is late, reveal the **Delay Information** section.
+
+Fields:
+
+### Delay Stage
+
+Select:
+
+* Plant
+* Transit
+* Customer/Site
+* Other
+
+### Delay Reason
+
+Options:
+
+* Traffic
+* Plant loading/batching
+* Truck availability
+* Mechanical issue
+* Site waiting
+* Route/access issue
+* Weather
+* Customer/site delay
+* Documentation/dispatch
+* Driver-related
+* Other
+
+### Remarks
+
+Free-text field for operational notes.
+
+Example:
+
+> "Truck reached site on schedule but unloading was delayed because access was temporarily blocked."
+
+Do not force users to provide a delay reason when the delivery is on time.
+
+---
+
+# 11. Automatic Delay Stage Logic
+
+Where possible, help users identify the delay stage from operational timestamps.
+
+For example:
+
+If loading takes significantly longer than the configured expected duration:
+
+**Potential Plant Delay**
+
+If transit duration is significantly higher than expected:
+
+**Potential Transit Delay**
+
+If the truck reaches the site but waits before unloading:
+
+**Potential Site Delay**
+
+The system may suggest a category, but the operator should be able to confirm or modify it.
+
+Clearly distinguish:
+
+**System suggestion**
+
+from
+
+**Operator-confirmed reason**
+
+---
+
+# 12. STEP 5: REVIEW
+
+Before saving, show a complete summary.
+
+Example:
+
+```text
+ORDER
+ORD-1048
+
+PROJECT
+ABC Construction
+
+TRUCK
+MIX-07
+
+QUANTITY
+7 m³
+
+ESTIMATED DELIVERY
+10:30 AM
+
+ACTUAL DELIVERY
+10:52 AM
+
+DELIVERY DELAY
+22 minutes
+
+STATUS
+Delayed
+
+DELAY STAGE
+Transit
+
+DELAY REASON
+Traffic
+```
+
+Allow the operator to go back and edit any section.
+
+---
+
+# 13. SAVE DELIVERY
+
+When the user selects:
+
+**Save Delivery**
+
+perform validation.
+
+If valid:
+
+1. Save the delivery.
+2. Calculate all derived metrics.
+3. Update dashboard statistics.
+4. Update analytics.
+5. Update project statistics.
+6. Update truck statistics.
+7. Update alerts if necessary.
+8. Create an audit log.
+9. Display a success notification.
+
+Example:
+
+**Delivery ORD-1048 saved successfully.**
+
+---
+
+# 14. VALIDATION
+
+Implement strong validation.
+
+Required:
+
+* Order ID
+* Date
+* Project
+* Customer
+* Concrete grade
+* Quantity
+* Truck
+* Estimated delivery
+
+Validate timestamps logically.
+
+Examples:
+
+```text
+Loading Started
+≤ Loading Completed
+≤ Actual Departure
+≤ Site Arrival
+≤ Unloading Started
+≤ Unloading Completed
+```
+
+Do not allow impossible sequences.
+
+Also validate:
+
+* Duplicate Order ID
+* Invalid dates
+* Invalid times
+* Negative quantity
+* Missing required values
+* Invalid truck
+* Invalid project
+
+Provide human-readable validation messages.
+
+---
+
+# 15. EDIT EXISTING DELIVERY
+
+Users with appropriate permissions can edit delivery records.
+
+When editing:
+
+* Recalculate derived metrics
+* Update dashboard statistics
+* Update analytics
+* Update alerts
+* Preserve audit history
+
+Never silently overwrite important operational history.
+
+---
+
+# 16. AUDIT LOG
+
+Every modification should record:
+
+* User
+* Timestamp
+* Delivery ID
+* Field changed
+* Previous value
+* New value
+* Action
+
+Example:
+
+```text
+02 Oct 2026, 10:42 AM
+
+Operator: John
+
+ORD-1048
+
+Actual Delivery
+10:45 AM → 10:52 AM
+```
+
+---
+
+# 17. QUICK ENTRY MODE
+
+Add a faster entry mode for experienced operators.
+
+Required fields:
+
+* Order ID
+* Date
+* Project
+* Customer
+* Truck
+* Quantity
+* Estimated delivery
+* Actual delivery
+* Delay reason if applicable
+
+Automatically calculate the delivery delay.
+
+This allows users to quickly record completed deliveries without entering every operational timestamp.
+
+---
+
+# 18. ACTIVE DELIVERY MODE
+
+For deliveries currently in progress, provide an operational workflow.
+
+Example:
+
+```text
+ORD-1048
+
+Scheduled
+   ↓
+Loading
+   ↓
+Ready
+   ↓
+Departed
+   ↓
+In Transit
+   ↓
+At Site
+   ↓
+Waiting
+   ↓
+Unloading
+   ↓
+Completed
+```
+
+Provide action buttons such as:
+
+**Start Loading**
+
+**Complete Loading**
+
+**Depart**
+
+**Arrived at Site**
+
+**Start Unloading**
+
+**Complete Delivery**
+
+Each action records a timestamp automatically.
+
+This makes the module much more useful than simple manual data entry.
+
+---
+
+# 19. DATA SOURCE
+
+For the prototype:
+
+Use browser Local Storage or an equivalent local persistence mechanism.
+
+However, create a proper service/data-access layer so the storage implementation can later be replaced by a database.
+
+Example:
+
+```text
+createDelivery()
+updateDelivery()
+getDelivery()
+getDeliveries()
+deleteDelivery()
+```
+
+Do not place Local Storage logic directly inside UI components.
+
+---
+
+# MODULE 2: PDF REPORT GENERATION
+
+# 20. Purpose
+
+Create a dedicated **Report Generation** module that converts operational delivery data and analytics into professional PDF reports.
+
+The PDF must be a genuine management report.
+
+Do not simply take a screenshot of the dashboard and place it inside a PDF.
+
+The report must have:
+
+* Structured sections
+* Professional typography
+* Tables
+* Charts
+* KPIs
+* Reporting period
+* Filters
+* Page numbers
+* Header/footer
+* Plant information
+* Generated timestamp
+
+---
+
+# 21. Report Navigation
+
+Add:
+
+**Reports**
+
+Under this module provide:
+
+* Generate Report
+* Report Templates
+* Generated Reports
+
+Primary action:
+
+**+ Generate Report**
+
+---
+
+# 22. REPORT BUILDER
+
+Create a report-generation wizard.
+
+Workflow:
+
+```text
+1. REPORT TYPE
+      ↓
+2. DATE RANGE
+      ↓
+3. FILTERS
+      ↓
+4. SECTIONS
+      ↓
+5. PREVIEW
+      ↓
+6. GENERATE PDF
+```
+
+---
+
+# 23. STEP 1: REPORT TYPE
+
+Provide report templates.
+
+### Daily Operations Report
+
+For plant supervisors.
+
+### Weekly Performance Report
+
+For operational management.
+
+### Monthly Management Report
+
+For management review.
+
+### Custom Report
+
+Allows users to select the required sections and date range.
+
+---
+
+# 24. STEP 2: REPORTING PERIOD
+
+Provide:
+
+* Today
+* Yesterday
+* This Week
+* Last Week
+* This Month
+* Last Month
+* Custom Range
+
+Example:
+
+```text
+01 September 2026
+to
+30 September 2026
+```
+
+Clearly display the selected reporting period before generation.
+
+---
+
+# 25. STEP 3: REPORT FILTERS
+
+Allow filtering by:
+
+* Project
+* Customer
+* Truck/Mixer
+* Concrete grade
+* Delivery status
+* Delay category
+* Delay reason
+
+Example:
+
+```text
+Date:
+01 Sep → 30 Sep
+
+Project:
+All
+
+Truck:
+All
+
+Delay Stage:
+Site
+```
+
+The PDF must contain only records matching the selected filters.
+
+---
+
+# 26. STEP 4: REPORT SECTIONS
+
+Allow the user to select which sections to include.
+
+Checkboxes:
+
+* Executive Summary
+* KPI Summary
+* Delivery Performance
+* Daily Trend
+* Delay Analysis
+* Delay Stage Analysis
+* Project Performance
+* Fleet Performance
+* Time-of-Day Analysis
+* Exceptions
+* Detailed Delivery Table
+* Operational Observations
+
+Provide sensible defaults depending on the report type.
+
+---
+
+# 27. DAILY REPORT
+
+The Daily Operations Report should contain:
+
+## Header
+
+**Concrete Delivery Operations**
+
+**Daily Operations Report**
+
+Plant name
+
+Reporting date
+
+Generated date/time
+
+---
+
+## KPI Summary
+
+Display:
+
+* Total deliveries
+* Completed deliveries
+* On-time %
+* Late deliveries
+* Average delay
+* Severe delays
+* Total quantity delivered
+* Average site waiting time
+
+All values must be dynamically calculated from the selected records.
+
+Never hardcode report statistics.
+
+---
+
+## Delivery Table
+
+Columns:
+
+* Order ID
+* Project
+* Truck
+* Grade
+* Quantity
+* Estimated Delivery
+* Actual Delivery
+* Delay
+* Status
+* Delay Reason
+
+---
+
+## Delay Analysis
+
+Include:
+
+* Delay reason chart
+* Delay stage summary
+* Total delay minutes
+* Average delay
+
+---
+
+## Operational Exceptions
+
+Display unusually delayed deliveries.
+
+For example:
+
+```text
+ORD-1048
+46 minutes late
+Site Delay
+Project ABC
+```
+
+---
+
+# 28. WEEKLY REPORT
+
+The Weekly Performance Report should contain:
+
+### Executive Summary
+
+Automatically generate a short factual summary from the selected data.
+
+Example:
+
+> A total of 428 deliveries were recorded during the reporting period. The recorded on-time delivery rate was 86.2%, with an average delivery delay of 16 minutes.
+
+The wording must be generated from actual calculations.
+
+---
+
+### KPI Section
+
+Include:
+
+* Total deliveries
+* On-time percentage
+* Average delay
+* Late deliveries
+* Severe delays
+* Quantity delivered
+
+---
+
+### Trend Section
+
+Include:
+
+**Daily Delivery Volume**
+
+and
+
+**Daily Average Delay**
+
+Use professional charts.
+
+---
+
+### Delay Analysis
+
+Include:
+
+**Delay by Reason**
+
+and
+
+**Delay by Stage**
+
+---
+
+### Project Analysis
+
+Table:
+
+```text
+Project
+Deliveries
+Quantity
+On-Time %
+Average Delay
+Site Waiting
+Severe Delays
+```
+
+---
+
+### Fleet Analysis
+
+Table:
+
+```text
+Mixer
+Deliveries
+On-Time %
+Average Delay
+Transit Time
+Mechanical Incidents
+```
+
+---
+
+# 29. MONTHLY MANAGEMENT REPORT
+
+Create a more comprehensive report.
+
+Recommended structure:
+
+### Page 1
+
+Cover page
+
+### Page 2
+
+Executive summary and KPIs
+
+### Page 3
+
+Delivery performance trends
+
+### Page 4
+
+Delay analysis
+
+### Page 5
+
+Project performance
+
+### Page 6
+
+Fleet performance
+
+### Page 7
+
+Operational patterns
+
+### Page 8
+
+Exceptions
+
+### Page 9
+
+Operational observations
+
+### Page 10
+
+Detailed delivery appendix
+
+The actual number of pages should dynamically adjust according to selected sections and data volume.
+
+---
+
+# 30. EXECUTIVE SUMMARY
+
+Generate a concise management-level summary.
+
+It should mention factual observations such as:
+
+* Delivery volume
+* On-time percentage
+* Average delay
+* Main recorded delay category
+* Significant operational patterns
+
+Example:
+
+> During the selected period, 512 deliveries were recorded. The on-time delivery rate was 87.4%, while the average delivery delay was 14 minutes. Site-related delays represented the largest recorded delay category.
+
+Do not generate unsupported explanations.
+
+Do not claim that a factor caused delays unless the data actually establishes that relationship.
+
+---
+
+# 31. CHARTS IN PDF
+
+Include high-quality charts such as:
+
+### Delivery Trend
+
+Line chart.
+
+### Daily Delivery Volume
+
+Bar chart.
+
+### Delay Reasons
+
+Horizontal bar chart.
+
+### Delay Stage
+
+Plant / Transit / Site.
+
+### Project Performance
+
+Comparison chart where appropriate.
+
+### Time-of-Day Pattern
+
+Heatmap.
+
+Charts must be generated from the same data used by the dashboard.
+
+The PDF and dashboard must always agree.
+
+---
+
+# 32. DETAILED DELIVERY APPENDIX
+
+Allow the user to include a detailed table containing every delivery matching the report filters.
+
+Columns:
+
+* Date
+* Order ID
+* Project
+* Customer
+* Truck
+* Grade
+* Quantity
+* Estimated Departure
+* Actual Departure
+* Estimated Delivery
+* Actual Delivery
+* Delay
+* Delay Stage
+* Delay Reason
+* Status
+
+If the table spans multiple pages, repeat the column header on every page.
+
+---
+
+# 33. OPERATIONAL OBSERVATIONS
+
+Generate a section called:
+
+**Operational Observations**
+
+Examples:
+
+> Site waiting represented 38% of recorded delay incidents during the selected period.
+
+> Average delay was higher during the 08:00-10:00 period than during the rest of the day.
+
+> Project ABC recorded 12 site-related delay incidents.
+
+These observations must be calculated from the dataset.
+
+Do not fabricate insights.
+
+Clearly distinguish:
+
+**Observed Data**
+
+from
+
+**Possible Interpretation**
+
+---
+
+# 34. REPORT PREVIEW
+
+Before generating the PDF, provide a report preview.
+
+Display:
+
+* Report title
+* Date range
+* Filters
+* Selected sections
+* Estimated number of pages
+
+Allow:
+
+**Back to Edit**
+
+and
+
+**Generate PDF**
+
+---
+
+# 35. PDF VISUAL DESIGN
+
+The generated document should look like a professional engineering/operations report.
+
+Use:
+
+* A4 page size
+* Consistent margins
+* Navy/blue/cyan brand palette
+* Clean typography
+* Professional tables
+* Clear section headings
+* Subtle visual separators
+* Consistent chart styling
+* Page numbers
+* Header/footer
+
+Cover page:
+
+```text
+CONCRETE DELIVERY
+OPERATIONS
+
+PERFORMANCE REPORT
+
+Peliyagoda Plant
+
+01 September 2026
+-
+30 September 2026
+```
+
+Footer:
+
+```text
+Concrete Delivery Operations Intelligence System
+Peliyagoda Plant
+Confidential / Internal Use
+Page X of Y
+```
+
+Do not make the PDF look like a screenshot of the web application.
+
+---
+
+# 36. PDF GENERATION TECHNOLOGY
+
+For the initial frontend implementation, use a reliable browser-compatible PDF library such as:
+
+**jsPDF + AutoTable**
+
+or another appropriate PDF-generation library.
+
+Charts should be rendered into the PDF at sufficient resolution.
+
+Keep report-generation logic separate from dashboard components.
+
+Suggested architecture:
+
+```text
+Delivery Data
+      ↓
+Analytics Engine
+      ↓
+Report Data Builder
+      ↓
+Chart Renderer
+      ↓
+PDF Layout Engine
+      ↓
+PDF Document
+```
+
+Create reusable functions such as:
+
+```text
+generateDailyReport()
+generateWeeklyReport()
+generateMonthlyReport()
+generateCustomReport()
+
+buildExecutiveSummary()
+buildKPISection()
+buildTrendSection()
+buildDelayAnalysis()
+buildProjectAnalysis()
+buildFleetAnalysis()
+buildExceptionSection()
+buildDeliveryAppendix()
+```
+
+---
+
+# 37. GENERATED REPORT HISTORY
+
+Create a **Generated Reports** page.
+
+Store metadata for generated reports:
+
+* Report name
+* Report type
+* Reporting period
+* Generated by
+* Generated date/time
+* Applied filters
+* Number of records
+* Sections included
+
+Example:
+
+```text
+Monthly Performance Report
+01 Sep 2026 - 30 Sep 2026
+
+Generated by:
+Operations Manager
+
+Generated:
+02 Oct 2026, 09:42 AM
+
+Records:
+512
+```
+
+Allow users to view/re-generate reports where supported.
+
+---
+
+# 38. REPORT SECURITY
+
+Respect user permissions.
+
+Example:
+
+### Administrator
+
+Can generate all reports.
+
+### Operations Manager
+
+Can generate operational reports.
+
+### Plant Operator
+
+Can generate daily operational reports.
+
+### Viewer
+
+May only view reports if permitted.
+
+Do not allow unauthorized users to access sensitive operational data.
+
+---
+
+# 39. DATA CONSISTENCY REQUIREMENT
+
+This is critical.
+
+The Data Input Module, Dashboard, Analytics Module, Alerts Module, and PDF Report Module must all use the same underlying delivery records.
+
+For example:
+
+If an operator enters:
+
+```text
+Estimated Delivery:
+10:30
+
+Actual Delivery:
+10:52
+```
+
+the system must automatically update:
+
+```text
+Delivery Delay = 22 min
+
+Status = Delayed
+
+Dashboard KPIs
+
+Daily Delay Trend
+
+Delay Reason Statistics
+
+Project Statistics
+
+Fleet Statistics
+
+Alerts
+
+Future PDF Reports
+```
+
+There must never be separate hardcoded datasets for individual modules.
+
+---
+
+# 40. FINAL USER FLOW
+
+The complete application workflow should be:
+
+```text
+USER LOGIN
+     ↓
+OPERATIONS DASHBOARD
+     ↓
+DATA INPUT
+     ↓
+CREATE DELIVERY
+     ↓
+RECORD OPERATIONAL EVENTS
+     ↓
+AUTOMATIC CALCULATIONS
+     ↓
+DELIVERY COMPLETED
+     ↓
+DASHBOARD UPDATED
+     ↓
+ANALYTICS UPDATED
+     ↓
+EXCEPTIONS / ALERTS UPDATED
+     ↓
+REPORT GENERATOR
+     ↓
+SELECT PERIOD + FILTERS
+     ↓
+PREVIEW REPORT
+     ↓
+GENERATE PROFESSIONAL PDF
+     ↓
+REPORT HISTORY
+```
+
+The overall experience should feel like a coherent **Concrete Delivery Operations Management and Intelligence System**, not a collection of disconnected pages.
+
+The two modules must prioritize:
+
+**Accurate data capture + automatic calculation + traceability + professional management reporting.**

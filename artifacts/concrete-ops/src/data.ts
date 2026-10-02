@@ -1,9 +1,9 @@
 export type Role = 'Administrator' | 'Operations Manager' | 'Plant Operator' | 'Viewer';
-export type DeliveryStatus = 'Scheduled' | 'Loading' | 'Ready' | 'Departed' | 'In Transit' | 'At Site' | 'Unloading' | 'Completed' | 'Delayed' | 'Cancelled';
+export type DeliveryStatus = 'Scheduled' | 'Loading' | 'Ready' | 'Departed' | 'In Transit' | 'At Site' | 'Waiting' | 'Unloading' | 'Completed' | 'Delayed' | 'Cancelled';
 export type Delivery = {
   id:string; orderId:string; date:string; projectId:string; customerId:string; truckId:string; concreteGrade:string; quantity:number;
   estimatedDeparture:string; actualDeparture:string; estimatedDelivery:string; actualDelivery:string; loadingStart:string; loadingComplete:string;
-  siteArrival:string; unloadingStart:string; unloadingComplete:string; status:DeliveryStatus; delayCategory:string; delayReason:string;
+  siteArrival:string; unloadingStart:string; unloadingComplete:string; status:DeliveryStatus; statusOverride?:boolean; delayStage:string; delayCategory:string; delayReason:string;
   remarks:string; createdBy:string; createdAt:string; updatedAt:string;
 };
 export type Project={id:string;name:string;customerId:string;location:string;status:string};
@@ -11,8 +11,13 @@ export type Customer={id:string;name:string;contact:string;location:string};
 export type Truck={id:string;registrationNumber:string;mixerNumber:string;capacity:number;status:string};
 export type DelayReason={id:string;name:string;category:string;stage:string;active:boolean};
 export type AuditLog={id:string;userId:string;action:string;entity:string;entityId:string;previousValue:string;newValue:string;timestamp:string};
-export type OpsSettings={plantName:string;location:string;onTimeTarget:number;slightMax:number;delayedMax:number;severeMin:number;mediumRiskMinutes:number;criticalRiskMinutes:number;reasons:DelayReason[]};
-export type Store={deliveries:Delivery[];projects:Project[];customers:Customer[];trucks:Truck[];audit:AuditLog[];settings:OpsSettings;role:Role;};
+export type ReportType='Daily Operations Report'|'Weekly Performance Report'|'Monthly Management Report'|'Custom Report';
+export type ReportSection='executiveSummary'|'kpiSummary'|'deliveryPerformance'|'dailyTrend'|'delayAnalysis'|'delayStageAnalysis'|'projectPerformance'|'fleetPerformance'|'timeOfDayAnalysis'|'exceptions'|'deliveryAppendix'|'operationalObservations';
+export type ReportFilters={projectId:string;customerId:string;truckId:string;concreteGrade:string;deliveryStatus:string;delayStage:string;delayCategory:string;delayReason:string};
+export type ReportConfig={type:ReportType;startDate:string;endDate:string;filters:ReportFilters;sections:ReportSection[]};
+export type ReportHistory={id:string;name:string;type:ReportType;startDate:string;endDate:string;generatedBy:string;generatedAt:string;filters:ReportFilters;recordCount:number;sections:ReportSection[]};
+export type OpsSettings={plantName:string;location:string;onTimeTarget:number;slightMax:number;delayedMax:number;severeMin:number;mediumRiskMinutes:number;criticalRiskMinutes:number;expectedLoadingMinutes:number;expectedTransitMinutes:number;expectedSiteWaitMinutes:number;concreteGrades:string[];reasons:DelayReason[]};
+export type Store={deliveries:Delivery[];drafts:Delivery[];projects:Project[];customers:Customer[];trucks:Truck[];audit:AuditLog[];reportHistory:ReportHistory[];settings:OpsSettings;role:Role;};
 const KEY='concrete-ops-v1';
 const customers:Customer[]=[
  {id:'CUS-01',name:'Sierra Civil Engineering',contact:'+94 11 276 4800',location:'Peliyagoda'},
@@ -81,30 +86,46 @@ function makeDelivery(i:number,now:Date):Delivery{
   estimatedDelivery:dateTime(date,estArr),actualDelivery:isCurrent?'':dateTime(date,actualArr),
   loadingStart:dateTime(date,loadStart),loadingComplete:active(loadEnd)?'':dateTime(date,loadEnd),
   siteArrival:isCurrent&&i%4<2?'':dateTime(date,actualArr),unloadingStart:isCurrent&&i%4<3?'':dateTime(date,unloadStart),unloadingComplete:isCurrent?'':dateTime(date,unloadEnd),
-  status,delayCategory:delay?'Operational':'',delayReason:delay?reason.name:'',remarks:delay?`${reason.category} recorded by dispatch.`:'',createdBy:'N. Perera',createdAt:dateTime(date,Math.max(360,schedule-35)),updatedAt:dateTime(date,Math.max(360,schedule-20))
+   status,statusOverride:false,delayStage:delay?(reason.stage==='Site'?'Customer/Site':reason.stage):'',delayCategory:delay?'Operational':'',delayReason:delay?reason.name:'',remarks:delay?`${reason.category} recorded by dispatch.`:'',createdBy:'N. Perera',createdAt:dateTime(date,Math.max(360,schedule-35)),updatedAt:dateTime(date,Math.max(360,schedule-20))
  };
 }
-const defaultSettings:OpsSettings={plantName:'Peliyagoda Ready-Mix Plant',location:'Peliyagoda, Sri Lanka',onTimeTarget:90,slightMax:15,delayedMax:30,severeMin:31,mediumRiskMinutes:20,criticalRiskMinutes:30,reasons};
+const defaultSettings:OpsSettings={plantName:'Peliyagoda Ready-Mix Plant',location:'Peliyagoda, Sri Lanka',onTimeTarget:90,slightMax:15,delayedMax:30,severeMin:31,mediumRiskMinutes:20,criticalRiskMinutes:30,expectedLoadingMinutes:25,expectedTransitMinutes:45,expectedSiteWaitMinutes:20,concreteGrades:['Grade 20','Grade 25','Grade 30','Grade 35','Grade 40'],reasons};
 export function seedStore():Store{
  const now=new Date();
  const deliveries=Array.from({length:210},(_,i)=>makeDelivery(i,now));
- return {deliveries,projects,customers,trucks,audit:[{id:'AUD-001',userId:'N. Perera',action:'Loaded demo dataset',entity:'System',entityId:'DEMO',previousValue:'',newValue:'210 demo delivery records',timestamp:new Date().toISOString()}],settings:defaultSettings,role:'Operations Manager'};
+  return {deliveries,drafts:[],projects,customers,trucks,audit:[{id:'AUD-001',userId:'N. Perera',action:'Loaded demo dataset',entity:'System',entityId:'DEMO',previousValue:'',newValue:'210 demo delivery records',timestamp:new Date().toISOString()}],reportHistory:[],settings:defaultSettings,role:'Operations Manager'};
 }
 export function loadStore():Store{
   try{
    const raw=localStorage.getItem(KEY);
    if(raw){
-    const parsed=JSON.parse(raw) as Store;
+     const parsed=JSON.parse(raw) as Partial<Store>;
     if(Array.isArray(parsed.deliveries)&&parsed.settings){
-     const untouchedDemo=parsed.deliveries.length===210&&parsed.audit?.length===1&&parsed.audit[0].action==='Loaded demo dataset'&&parsed.deliveries.every((d,i)=>d.id===`DEL-${String(3000+i).padStart(5,'0')}`);
-     const completed=parsed.deliveries.filter(d=>d.actualDelivery);
+      const defaults=seedStore();
+      const normalized:Store={
+       ...defaults,
+       ...parsed,
+       deliveries:parsed.deliveries.map(d=>{
+        const configuredStage=d.delayReason?parsed.settings?.reasons?.find(r=>r.name===d.delayReason)?.stage||'':'';
+        return {...d,statusOverride:d.statusOverride??false,delayStage:d.delayStage||(configuredStage==='Site'?'Customer/Site':configuredStage)};
+       }),
+       drafts:Array.isArray(parsed.drafts)?parsed.drafts:[],
+       reportHistory:Array.isArray(parsed.reportHistory)?parsed.reportHistory:[],
+       settings:{...defaults.settings,...parsed.settings,concreteGrades:Array.isArray(parsed.settings.concreteGrades)?parsed.settings.concreteGrades:defaults.settings.concreteGrades,reasons:Array.isArray(parsed.settings.reasons)?parsed.settings.reasons:defaults.settings.reasons},
+       audit:Array.isArray(parsed.audit)?parsed.audit:defaults.audit,
+       projects:Array.isArray(parsed.projects)?parsed.projects:defaults.projects,
+       customers:Array.isArray(parsed.customers)?parsed.customers:defaults.customers,
+       trucks:Array.isArray(parsed.trucks)?parsed.trucks:defaults.trucks,
+      };
+      const untouchedDemo=normalized.deliveries.length===210&&normalized.audit.length===1&&normalized.audit[0].action==='Loaded demo dataset'&&normalized.deliveries.every((d,i)=>d.id===`DEL-${String(3000+i).padStart(5,'0')}`);
+      const completed=normalized.deliveries.filter(d=>d.actualDelivery);
      const onTimeRate=completed.length?completed.filter(d=>(new Date(d.actualDelivery).getTime()-new Date(d.estimatedDelivery).getTime())<=0).length/completed.length:1;
      if(untouchedDemo&&onTimeRate<0.6){
-      const refreshed={...parsed,deliveries:seedStore().deliveries};
+       const refreshed={...normalized,deliveries:seedStore().deliveries};
       saveStore(refreshed);
       return refreshed;
      }
-     return parsed;
+      return normalized;
     }
    }
   }catch{}
@@ -112,7 +133,7 @@ export function loadStore():Store{
 }
 export function saveStore(store:Store){localStorage.setItem(KEY,JSON.stringify(store));}
 export function logAudit(store:Store,action:string,entity:string,entityId:string,previousValue='',newValue=''):Store{
- const entry:AuditLog={id:`AUD-${Date.now()}`,userId:store.role,action,entity,entityId,previousValue,newValue,timestamp:new Date().toISOString()};
+  const entry:AuditLog={id:`AUD-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,userId:store.role,action,entity,entityId,previousValue,newValue,timestamp:new Date().toISOString()};
  return {...store,audit:[entry,...store.audit]};
 }
 export function resetStore(){const store=seedStore();saveStore(store);return store;}

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Concrete Delivery Operations"
+description = "A ready-mix concrete operations intelligence app for monitoring deliveries, investigating delay patterns, managing fleet and project records, and reporting operational performance. Includes persistent browser storage, realistic demo records, CSV import/export, and interactive analytics."
+version = "1.0.0"
+id = "artifacts/concrete-ops"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19290
+
+[services.development]
+run = "pnpm --filter @workspace/concrete-ops run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/concrete-ops", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/concrete-ops/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19290"
+BASE_PATH = "/"

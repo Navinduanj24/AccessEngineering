@@ -1,0 +1,2123 @@
+# Concrete Delivery Operations Intelligence System
+
+## 1. Project Overview
+
+Build a professional, production-style web application called:
+
+**Concrete Delivery Operations Intelligence System**
+
+The system is designed for a ready-mix concrete plant to monitor, analyze, and improve the performance of concrete deliveries.
+
+The initial implementation is based on a Peliyagoda concrete plant operation, but the architecture must be generic enough to support multiple plants, projects, customers, trucks, and operational users in the future.
+
+The core business problem is:
+
+> Concrete deliveries are planned around estimated departure and delivery times, but actual deliveries may be delayed because of traffic, plant loading, truck availability, site waiting, route issues, weather, or other operational factors.
+
+The system should convert raw delivery information into actionable operational intelligence.
+
+### Core workflow
+
+**Order → Scheduling → Plant Loading → Departure → Transit → Site Arrival → Delay Analysis → Operational Insight**
+
+The application should answer:
+
+* How many deliveries were completed?
+* How many were on time?
+* How many were delayed?
+* How severe were the delays?
+* What is the average delay?
+* Which projects experience the most delays?
+* Which trucks experience recurring delays?
+* Which days/times have the highest delays?
+* What are the most common delay causes?
+* Are delays mainly happening at the plant, during transportation, or at the customer site?
+* Which deliveries require immediate attention?
+* Are operational performance levels improving over time?
+
+---
+
+# 2. Design Philosophy
+
+Do not build this as a generic admin dashboard template.
+
+It should look like a serious **industrial operations monitoring system** used by a concrete plant or logistics operation.
+
+Visual direction:
+
+* Professional
+* Modern
+* Minimal
+* Industrial
+* Data-focused
+* High information density without looking cluttered
+* Excellent spacing and hierarchy
+* Responsive
+* Desktop-first but fully usable on tablets
+* Clean typography
+* Subtle animations
+* Professional charts
+* Strong visual distinction between normal, warning, and critical conditions
+
+Use a sophisticated navy / blue / cyan visual system inspired by engineering and industrial monitoring interfaces.
+
+Avoid:
+
+* Excessive gradients
+* Excessive glassmorphism
+* Cartoon-style illustrations
+* Huge decorative elements
+* AI-generated-looking UI
+* Generic SaaS dashboard appearance
+* Excessive rounded cards
+* Excessive shadows
+* Unnecessary animations
+
+Use **Poppins** or another highly readable modern sans-serif font.
+
+---
+
+# 3. Application Structure
+
+Create the following primary sections:
+
+1. Login
+2. Operations Overview
+3. Live Delivery Monitor
+4. Deliveries
+5. Delivery Details
+6. Analytics
+7. Delay Analysis
+8. Projects / Customers
+9. Fleet / Mixers
+10. Plant Operations
+11. Reports
+12. Alerts
+13. Data Import / Export
+14. Settings
+15. Audit Log
+
+The sidebar should provide navigation between these modules.
+
+---
+
+# 4. Authentication
+
+Create a professional login screen.
+
+### Login screen
+
+Display:
+
+**Concrete Delivery Operations Intelligence System**
+
+Subtitle:
+
+**Monitor deliveries. Identify delays. Improve operational performance.**
+
+Fields:
+
+* Username/email
+* Password
+
+Options:
+
+* Remember me
+* Sign in
+
+Include a subtle animated industrial background.
+
+Do not expose real credentials in the frontend.
+
+For the prototype, authentication can use mock credentials or local authentication, but structure the application so it can later be connected to a proper backend authentication system.
+
+---
+
+# 5. User Roles
+
+Implement role-based access conceptually.
+
+Roles:
+
+### Administrator
+
+Full access.
+
+Can:
+
+* Manage users
+* Manage trucks
+* Manage projects
+* Manage customers
+* Configure delay categories
+* Import/export data
+* View analytics
+* Modify settings
+* View audit logs
+
+### Operations Manager
+
+Can:
+
+* View all operational data
+* Add/edit deliveries
+* View analytics
+* Generate reports
+* Monitor alerts
+
+### Plant Operator
+
+Can:
+
+* Create deliveries
+* Update delivery status
+* Record plant-related delays
+* Update loading/departure information
+
+### Viewer
+
+Read-only access.
+
+Design the authorization architecture even if the first prototype uses frontend/local authentication.
+
+---
+
+# 6. Main Dashboard
+
+The main dashboard is the most important screen.
+
+It should provide an immediate operational overview.
+
+## Header
+
+Display:
+
+**Operations Overview**
+
+Example:
+
+`Peliyagoda Ready-Mix Plant`
+
+Show:
+
+* Current date
+* Last data synchronization time
+* Current operational status
+
+Add a date-range selector:
+
+* Today
+* Yesterday
+* Last 7 Days
+* Last 30 Days
+* Custom Range
+
+---
+
+# 7. KPI Cards
+
+Create high-quality KPI cards.
+
+### Total Deliveries
+
+Example:
+
+**248**
+
+Subtitle:
+
+`+12.4% vs previous period`
+
+### On-Time Delivery
+
+Example:
+
+**84.7%**
+
+Show target:
+
+`Target: 90%`
+
+### Average Delay
+
+Example:
+
+**18 min**
+
+### Late Deliveries
+
+Example:
+
+**38**
+
+### Severe Delays
+
+Example:
+
+**11**
+
+Define severe delay as configurable, for example:
+
+`> 30 minutes`
+
+### Average Transit Time
+
+Example:
+
+**47 min**
+
+### Average Site Waiting Time
+
+Example:
+
+**21 min**
+
+### Plant Loading Time
+
+Example:
+
+**14 min**
+
+Do not hardcode these values into the interface. They must be calculated from delivery data.
+
+---
+
+# 8. Operational Performance Score
+
+Create an optional composite operational indicator.
+
+Example:
+
+**Delivery Performance Index**
+
+`82 / 100`
+
+This should be calculated from configurable factors such as:
+
+* On-time percentage
+* Average delay
+* Severe delay percentage
+* Site waiting time
+* Plant loading efficiency
+
+Clearly label it as an internal operational indicator rather than a standardized industry metric.
+
+Allow administrators to configure the weighting later.
+
+---
+
+# 9. Delivery Status Distribution
+
+Create a visual showing:
+
+* On Time
+* Slightly Late
+* Delayed
+* Severely Delayed
+* Cancelled
+
+Example thresholds:
+
+### On Time
+
+0 minutes or earlier
+
+### Slight Delay
+
+1-15 minutes
+
+### Delayed
+
+16-30 minutes
+
+### Severe Delay
+
+31+ minutes
+
+Make these thresholds configurable.
+
+---
+
+# 10. Delivery Performance Trend
+
+Create a large interactive line chart.
+
+Title:
+
+**Delivery Delay Trend**
+
+X-axis:
+
+Date
+
+Y-axis:
+
+Average delay in minutes
+
+Display:
+
+* Average delay
+* Median delay
+* On-time percentage
+
+Allow users to toggle individual metrics.
+
+Include:
+
+* 7-day
+* 30-day
+* 90-day views
+
+Add tooltips.
+
+---
+
+# 11. Daily Delivery Volume
+
+Create a bar chart showing:
+
+**Deliveries by Day**
+
+This helps compare operational volume with delay performance.
+
+Allow users to compare:
+
+* Number of deliveries
+* Average delay
+* On-time percentage
+
+The system should make it possible to detect whether higher delivery volume correlates with higher delays.
+
+---
+
+# 12. Delay Reason Analysis
+
+Create a professional horizontal bar chart.
+
+Title:
+
+**Why Are Deliveries Being Delayed?**
+
+Categories:
+
+* Traffic
+* Plant Loading / Batching
+* Truck Availability
+* Site Waiting
+* Route / Access Issue
+* Weather
+* Customer / Site Delay
+* Mechanical Issue
+* Driver Issue
+* Documentation / Dispatch
+* Other
+
+Show:
+
+* Number of incidents
+* Total delay minutes
+* Average delay
+
+Allow sorting by:
+
+* Frequency
+* Total delay
+* Average delay
+
+This distinction is important.
+
+For example, a delay reason occurring 50 times for 5 minutes each may create less total lost time than a reason occurring 10 times for 45 minutes each.
+
+---
+
+# 13. Delay Stage Analysis
+
+Add an important operational dimension.
+
+Categorize delays into:
+
+### Plant Delay
+
+Time spent waiting for:
+
+* Batching
+* Loading
+* Dispatch
+* Documentation
+
+### Transit Delay
+
+Time lost during:
+
+* Traffic
+* Route problems
+* Vehicle problems
+
+### Site Delay
+
+Time spent waiting at:
+
+* Construction site
+* Customer location
+* Access point
+* Unloading location
+
+Create a stacked visualization showing:
+
+**Plant vs Transit vs Site Delay**
+
+This allows management to understand where the operational bottleneck is occurring.
+
+---
+
+# 14. Live Delivery Monitor
+
+Create a dedicated screen for active deliveries.
+
+Table columns:
+
+* Order ID
+* Project
+* Customer
+* Truck
+* Concrete Grade
+* Quantity
+* Departure
+* Estimated Arrival
+* Current Status
+* Delay
+* Delay Risk
+
+Statuses:
+
+* Scheduled
+* Loading
+* Ready
+* Departed
+* In Transit
+* At Site
+* Unloading
+* Completed
+* Delayed
+* Cancelled
+
+For active deliveries, display real-time-style status updates.
+
+Since the initial application may not have GPS, use manually updated statuses.
+
+Architect the application so GPS integration can be added later.
+
+---
+
+# 15. Delay Risk Indicator
+
+For active deliveries, calculate a simple operational risk indicator.
+
+Example:
+
+### Low Risk
+
+Delivery is currently within expected schedule.
+
+### Medium Risk
+
+Delivery is approaching estimated delivery time.
+
+### High Risk
+
+Estimated delivery time is likely to be missed.
+
+### Critical
+
+Delivery has already exceeded the estimated delivery time significantly.
+
+This should be based on:
+
+* Current status
+* Estimated delivery time
+* Current time
+* Historical delay information where available
+
+Do not present this as a machine-learning prediction unless an actual predictive model is implemented.
+
+---
+
+# 16. Delivery Management
+
+Create a full delivery-management table.
+
+Columns:
+
+* Date
+* Order ID
+* Project
+* Customer
+* Truck
+* Concrete Grade
+* Quantity
+* Estimated Departure
+* Actual Departure
+* Estimated Delivery
+* Actual Delivery
+* Delivery Delay
+* Delay Category
+* Delay Reason
+* Status
+* Operator
+* Remarks
+
+Features:
+
+* Search
+* Sorting
+* Filtering
+* Pagination
+* Column visibility
+* Date filtering
+* Export
+* Bulk selection
+
+---
+
+# 17. Delivery Entry Form
+
+Create a professional form.
+
+### Delivery Information
+
+* Order ID
+* Date
+* Project
+* Customer
+* Concrete Grade
+* Quantity
+* Truck/Mixer
+
+### Schedule
+
+* Estimated departure
+* Estimated delivery
+
+### Actual Operation
+
+* Actual departure
+* Actual delivery
+* Plant loading start
+* Plant loading completed
+* Site arrival
+* Unloading start
+* Unloading completed
+
+### Delay Information
+
+* Delay category
+* Delay reason
+* Delay duration
+* Remarks
+
+Automatically calculate:
+
+* Departure delay
+* Delivery delay
+* Plant loading duration
+* Transit duration
+* Site waiting duration
+* Unloading duration
+* Total operational cycle time
+
+Do not allow users to manually overwrite calculated values unless administrator permissions allow it.
+
+---
+
+# 18. Delivery Timeline
+
+Every delivery should have a detailed timeline.
+
+Example:
+
+**08:15**
+
+Order created
+
+↓
+
+**08:25**
+
+Batching started
+
+↓
+
+**08:37**
+
+Loading completed
+
+↓
+
+**08:42**
+
+Truck departed
+
+↓
+
+**09:20**
+
+Expected arrival
+
+↓
+
+**09:48**
+
+Actual arrival
+
+↓
+
+**10:05**
+
+Unloading completed
+
+Show duration between each stage.
+
+This is one of the most valuable features because it helps identify exactly where time was lost.
+
+---
+
+# 19. Delivery Detail Page
+
+Clicking a delivery should open a detailed view.
+
+Display:
+
+### Summary
+
+* Order ID
+* Project
+* Customer
+* Truck
+* Concrete Grade
+* Quantity
+
+### Performance
+
+* Estimated delivery
+* Actual delivery
+* Delay
+* Status
+
+### Timeline
+
+Visual operational timeline.
+
+### Delay Analysis
+
+Show:
+
+* Delay category
+* Delay reason
+* Duration
+* Remarks
+
+### Operational Metrics
+
+* Loading time
+* Transit time
+* Site waiting
+* Unloading time
+* Total cycle time
+
+### Audit History
+
+Show who changed what and when.
+
+---
+
+# 20. Project / Customer Analysis
+
+Create a Projects module.
+
+Each project should show:
+
+* Total deliveries
+* On-time percentage
+* Average delay
+* Severe delays
+* Average site waiting time
+* Total quantity delivered
+
+Example:
+
+**Project A**
+
+`42 deliveries`
+
+`88.1% on time`
+
+`Average delay: 13 min`
+
+Allow users to open a project and see its complete delivery history.
+
+This can identify projects where site conditions consistently contribute to delays.
+
+---
+
+# 21. Fleet / Mixer Analysis
+
+Create a truck performance module.
+
+For every mixer:
+
+* Mixer ID
+* Total deliveries
+* On-time percentage
+* Average delay
+* Average transit time
+* Mechanical delay incidents
+* Total operating hours
+* Last delivery
+
+Example:
+
+**MIX-07**
+
+`58 deliveries`
+
+`91% on time`
+
+`12 min average delay`
+
+Include a note:
+
+> Metrics describe recorded operational performance and should not be interpreted as vehicle fault diagnosis.
+
+---
+
+# 22. Plant Operations Analysis
+
+Create a dedicated plant-performance section.
+
+Analyze:
+
+* Batching time
+* Loading time
+* Dispatch waiting
+* Orders per hour
+* Peak dispatch periods
+* Plant-related delay frequency
+
+Create a heatmap:
+
+**Delivery Delays by Hour**
+
+Example:
+
+| Time  | Delay Level |
+| ----- | ----------- |
+| 06:00 | Low         |
+| 07:00 | Low         |
+| 08:00 | Medium      |
+| 09:00 | High        |
+| 10:00 | High        |
+| 11:00 | Medium      |
+
+This can help identify operational bottlenecks during high-volume periods.
+
+---
+
+# 23. Time-of-Day Analysis
+
+Analyze delays by:
+
+* Hour
+* Morning
+* Afternoon
+* Evening
+* Day of week
+
+Create a heatmap:
+
+**Day × Hour**
+
+This should allow users to identify recurring patterns.
+
+For example:
+
+Monday 08:00-10:00 could show consistently higher delays.
+
+Do not automatically claim the cause. Present it as a pattern requiring operational investigation.
+
+---
+
+# 24. Route / Location Analysis
+
+If route/location data is available, allow:
+
+* Project location
+* Route
+* Distance
+* Estimated travel time
+* Actual travel time
+
+Compare:
+
+**Expected Transit Time vs Actual Transit Time**
+
+Later architecture should allow integration with mapping APIs.
+
+For the prototype, route information can remain manually entered.
+
+---
+
+# 25. Alerts & Exceptions
+
+Create an alerts panel.
+
+Examples:
+
+**Critical Delay**
+
+Order `ORD-1048` is 42 minutes late.
+
+**Repeated Project Delays**
+
+Project `ABC Construction` has experienced 8 delays in the last 7 days.
+
+**Fleet Issue**
+
+Mixer `MIX-04` has recorded 4 mechanical-delay incidents.
+
+**Plant Bottleneck**
+
+Loading delays increased by 27% compared with the previous period.
+
+**Performance Drop**
+
+On-time delivery rate has fallen below the configured target.
+
+Allow administrators to configure thresholds.
+
+---
+
+# 26. Exception Dashboard
+
+Create a focused page:
+
+**Exceptions Requiring Attention**
+
+Only show deliveries or patterns requiring investigation.
+
+Columns:
+
+* Priority
+* Order
+* Project
+* Delay
+* Reason
+* Stage
+* Status
+* Action
+
+This allows supervisors to focus on exceptions rather than reviewing every delivery.
+
+---
+
+# 27. Analytics Module
+
+Create advanced analytics.
+
+### Performance by:
+
+* Date
+* Project
+* Customer
+* Truck
+* Concrete grade
+* Quantity
+* Delay reason
+* Delay stage
+* Hour
+* Day of week
+
+Allow multiple filters simultaneously.
+
+Example:
+
+`Project = ABC`
+
+`Date = Last 30 days`
+
+`Delay Stage = Site`
+
+Then update all charts dynamically.
+
+---
+
+# 28. Concrete Grade Analysis
+
+Analyze whether delivery performance differs across concrete grades.
+
+Examples:
+
+* Grade 20
+* Grade 25
+* Grade 30
+* Grade 40
+
+Show:
+
+* Delivery volume
+* Average delay
+* On-time percentage
+* Average quantity
+
+This could reveal operational differences associated with particular order types.
+
+Do not automatically infer causation from correlation.
+
+---
+
+# 29. Quantity vs Delay Analysis
+
+Create a scatter plot:
+
+**Delivery Quantity vs Delay**
+
+X-axis:
+
+Quantity (m³)
+
+Y-axis:
+
+Delay (minutes)
+
+Allow users to investigate whether larger loads are associated with longer operational cycles.
+
+Again, present this as correlation analysis rather than causal inference.
+
+---
+
+# 30. Reporting
+
+Create a Reports module.
+
+Allow generation of:
+
+### Daily Operations Report
+
+Include:
+
+* Total deliveries
+* On-time percentage
+* Average delay
+* Late deliveries
+* Major delay reasons
+* Major exceptions
+
+### Weekly Performance Report
+
+Include:
+
+* Weekly KPIs
+* Trend charts
+* Delay analysis
+* Project performance
+* Fleet performance
+
+### Monthly Management Report
+
+Include:
+
+* Overall performance
+* Trends
+* Top delay causes
+* Project comparison
+* Fleet summary
+* Operational recommendations based strictly on recorded patterns
+
+Allow:
+
+* PDF export
+* CSV export
+* Print-friendly report
+
+---
+
+# 31. CSV Import
+
+Create a dedicated import workflow.
+
+Steps:
+
+1. Upload CSV
+2. Detect columns
+3. Preview data
+4. Validate records
+5. Show errors
+6. Confirm import
+7. Import records
+8. Display summary
+
+Example:
+
+`248 records detected`
+
+`241 valid`
+
+`7 records require correction`
+
+Validation should identify:
+
+* Missing Order ID
+* Invalid date
+* Invalid time
+* Negative quantity
+* Actual delivery before departure
+* Duplicate Order ID
+* Invalid truck ID
+
+Do not silently import invalid records.
+
+---
+
+# 32. CSV Export
+
+Allow users to export:
+
+* All deliveries
+* Filtered deliveries
+* Selected deliveries
+* Analytics data
+
+Include all relevant fields.
+
+---
+
+# 33. Data Validation
+
+Implement robust validation.
+
+Examples:
+
+Actual departure cannot occur before estimated departure by default without an explanatory condition.
+
+Actual delivery cannot occur before actual departure.
+
+Quantity must be greater than zero.
+
+Order IDs should be unique.
+
+Required fields must be validated.
+
+Invalid records should receive clear error messages.
+
+---
+
+# 34. Audit Logging
+
+Create an audit system.
+
+Record:
+
+* User
+* Timestamp
+* Action
+* Record
+* Previous value
+* New value
+
+Examples:
+
+`Admin changed delay reason for ORD-1048`
+
+`Operator updated actual delivery time`
+
+`Manager exported delivery data`
+
+This makes the system more appropriate for real operational use.
+
+---
+
+# 35. Data Persistence
+
+The initial prototype may use:
+
+**Browser Local Storage**
+
+However, create a clean data-access layer so the storage system can later be replaced by:
+
+* PostgreSQL
+* MySQL
+* Firebase
+* Supabase
+* REST API
+
+Do not tightly couple business logic directly to Local Storage.
+
+Create functions such as:
+
+```text
+getDeliveries()
+createDelivery()
+updateDelivery()
+deleteDelivery()
+getProjects()
+getTrucks()
+getAnalytics()
+```
+
+This makes future backend migration significantly easier.
+
+---
+
+# 36. Recommended Architecture
+
+For the enhanced version, use:
+
+### Frontend
+
+React + TypeScript
+
+### Styling
+
+Tailwind CSS or a well-structured CSS architecture
+
+### Charts
+
+Chart.js or Recharts
+
+### Icons
+
+Lucide React
+
+### Backend-ready architecture
+
+REST API service layer
+
+### Database-ready
+
+PostgreSQL / Supabase
+
+### Authentication-ready
+
+Role-based authentication
+
+### Deployment
+
+Frontend:
+
+Vercel / Netlify / Firebase Hosting
+
+Backend:
+
+Supabase / Render / Railway / cloud infrastructure
+
+For the first prototype, the backend may remain mocked and Local Storage can be used.
+
+---
+
+# 37. Data Model
+
+Design the application around these entities:
+
+### Delivery
+
+```text
+id
+orderId
+date
+projectId
+customerId
+truckId
+concreteGrade
+quantity
+estimatedDeparture
+actualDeparture
+estimatedDelivery
+actualDelivery
+status
+delayCategory
+delayReason
+remarks
+createdBy
+createdAt
+updatedAt
+```
+
+### Project
+
+```text
+id
+name
+customer
+location
+contact
+status
+```
+
+### Truck
+
+```text
+id
+registrationNumber
+mixerNumber
+capacity
+status
+```
+
+### Customer
+
+```text
+id
+name
+contact
+location
+```
+
+### DelayReason
+
+```text
+id
+name
+category
+stage
+active
+```
+
+### User
+
+```text
+id
+name
+email
+role
+status
+```
+
+### AuditLog
+
+```text
+id
+userId
+action
+entity
+entityId
+previousValue
+newValue
+timestamp
+```
+
+---
+
+# 38. Demo Dataset
+
+The application must include a realistic demo dataset so that the dashboard does not appear empty.
+
+Generate at least:
+
+**150-300 realistic delivery records**
+
+Cover:
+
+* Multiple projects
+* Multiple customers
+* Multiple trucks
+* Multiple concrete grades
+* Different delivery quantities
+* Different days
+* Different delay reasons
+* On-time deliveries
+* Slight delays
+* Severe delays
+* Plant delays
+* Transit delays
+* Site delays
+
+The dataset should produce realistic patterns rather than random nonsense.
+
+For example:
+
+* Traffic delays should occur more frequently during peak periods.
+* Site waiting should be concentrated in certain projects.
+* Plant loading delays should occasionally increase during high-volume periods.
+* Some days should perform better than others.
+* A small number of severe delays should exist.
+
+However, clearly label the dataset as **Demo Data**.
+
+---
+
+# 39. Demo Mode
+
+Add a visible indicator:
+
+**DEMO DATA**
+
+Allow the user to:
+
+* Load demo dataset
+* Clear demo dataset
+* Import real data
+
+Never mix demo and real operational data without clearly informing the user.
+
+---
+
+# 40. Empty States
+
+Every module must have professional empty states.
+
+Example:
+
+**No deliveries found**
+
+`Try changing your filters or add a new delivery record.`
+
+Do not display broken charts or empty white spaces.
+
+---
+
+# 41. Loading States
+
+Use skeleton loaders for:
+
+* KPI cards
+* Charts
+* Tables
+* Detail pages
+
+Avoid excessive spinners.
+
+---
+
+# 42. Error Handling
+
+Provide clear errors.
+
+Examples:
+
+**Unable to import file**
+
+`The uploaded CSV contains 7 invalid records.`
+
+**Unable to save delivery**
+
+`Please correct the highlighted fields and try again.`
+
+Do not expose technical stack traces to users.
+
+---
+
+# 43. Search & Filtering
+
+Global search should support:
+
+* Order ID
+* Project
+* Customer
+* Truck ID
+
+Advanced filters:
+
+* Date range
+* Status
+* Delay severity
+* Delay category
+* Delay reason
+* Project
+* Customer
+* Truck
+* Concrete grade
+
+Filters should update all relevant dashboard components.
+
+---
+
+# 44. Dashboard Interactivity
+
+Charts must not be static images.
+
+Users should be able to:
+
+* Hover
+* View tooltips
+* Toggle datasets
+* Click chart elements to filter
+* Reset filters
+* Drill down into underlying deliveries
+
+Example:
+
+Click:
+
+**Traffic**
+
+The application filters the delivery table to show deliveries affected by traffic.
+
+---
+
+# 45. Drill-Down Analytics
+
+This is an important enhancement.
+
+A user should be able to go from:
+
+**Overall Delay**
+
+↓
+
+**Delay Category**
+
+↓
+
+**Specific Reason**
+
+↓
+
+**Project**
+
+↓
+
+**Delivery**
+
+Example:
+
+`Average delay = 18 min`
+
+↓
+
+`Transit delay = 11 min`
+
+↓
+
+`Traffic = 8 min`
+
+↓
+
+`Project ABC = 14 affected deliveries`
+
+↓
+
+`ORD-1048`
+
+This creates a proper analytical workflow rather than a collection of charts.
+
+---
+
+# 46. Performance Comparison
+
+Allow comparison between two periods.
+
+Example:
+
+**This Month vs Previous Month**
+
+Compare:
+
+* Deliveries
+* On-time %
+* Average delay
+* Severe delays
+* Plant delays
+* Transit delays
+* Site delays
+
+Use percentage changes.
+
+Example:
+
+`Average delay`
+
+`18 min → 14 min`
+
+`22.2% reduction`
+
+Ensure calculations are mathematically accurate.
+
+---
+
+# 47. Target Configuration
+
+Allow administrators to configure operational targets.
+
+Example:
+
+On-time delivery target:
+
+`90%`
+
+Maximum acceptable average delay:
+
+`15 minutes`
+
+Severe delay threshold:
+
+`30 minutes`
+
+These values should not be hardcoded throughout the application.
+
+---
+
+# 48. Management Insights
+
+Create an automatically generated **Operational Insights** section.
+
+Examples:
+
+> Site waiting accounted for the largest share of recorded delay time during the selected period.
+
+> Monday morning deliveries showed higher average delays than the weekly average.
+
+> Project ABC recorded repeated site-related delays during the selected period.
+
+Important:
+
+The system must distinguish between:
+
+**Observed fact**
+
+and
+
+**Possible interpretation**
+
+Never state that one factor caused another unless the data actually supports that conclusion.
+
+---
+
+# 49. Future AI Module
+
+Design the architecture so an optional AI module can be added later.
+
+Potential features:
+
+### Natural Language Analytics
+
+A manager could ask:
+
+> "Which projects had the highest delivery delays this month?"
+
+or:
+
+> "Why did delivery performance decline last week?"
+
+The system would translate the question into database queries and summarize the actual data.
+
+### Anomaly Detection
+
+Identify unusual:
+
+* Delay spikes
+* Loading times
+* Site waiting times
+* Truck performance
+
+### Predictive Delay Risk
+
+With sufficient historical data, predict whether an active delivery is likely to become late.
+
+This should only be implemented as a genuine predictive model later. Do not fake AI predictions in the initial version.
+
+---
+
+# 50. Future GPS Integration
+
+Design for future integration with vehicle tracking.
+
+Potential architecture:
+
+```text
+Truck GPS
+    ↓
+Location API
+    ↓
+Delivery Tracking Service
+    ↓
+Expected Arrival Calculation
+    ↓
+Delay Risk
+    ↓
+Operations Dashboard
+```
+
+Future features:
+
+* Live truck location
+* Route tracking
+* Estimated arrival time
+* Route deviation
+* Traffic-aware ETA
+* Geofencing
+* Arrival detection
+
+Do not implement fake GPS functionality in the prototype.
+
+---
+
+# 51. Notifications
+
+Design notification infrastructure for future:
+
+* Email
+* WhatsApp
+* SMS
+* Push notifications
+
+Potential alerts:
+
+> Delivery ORD-1048 is 30 minutes overdue.
+
+> Project ABC has exceeded the site waiting threshold.
+
+> On-time performance has fallen below target.
+
+---
+
+# 52. Responsive Design
+
+Desktop is the primary environment.
+
+Support:
+
+### Desktop
+
+Full dashboard with sidebar and multi-column analytics.
+
+### Tablet
+
+Collapsible sidebar and responsive charts.
+
+### Mobile
+
+Prioritize:
+
+* Active deliveries
+* Alerts
+* KPIs
+* Delivery details
+
+Tables should become horizontally scrollable or transform into cards.
+
+---
+
+# 53. Accessibility
+
+Implement:
+
+* Keyboard navigation
+* Visible focus states
+* Semantic HTML
+* Accessible labels
+* Sufficient contrast
+* Screen-reader-friendly controls
+* Avoid relying solely on color to communicate status
+
+For example, a delayed delivery should display:
+
+`Delayed • 32 min`
+
+rather than relying only on a red color.
+
+---
+
+# 54. Performance
+
+Optimize for:
+
+* Fast initial load
+* Efficient chart rendering
+* Virtualized large tables if necessary
+* Debounced search
+* Lazy-loaded modules
+* Minimal unnecessary re-renders
+
+The dashboard should remain responsive with thousands of delivery records.
+
+---
+
+# 55. Security
+
+Even though the first version may be a frontend prototype, follow secure development practices.
+
+Implement:
+
+* Input validation
+* Output escaping
+* No hardcoded production passwords
+* No exposed API keys
+* Secure authentication architecture
+* Role-based authorization design
+* Audit logging
+* Safe CSV parsing
+* Protection against malicious CSV formulas
+* No sensitive information in Local Storage unless explicitly required
+
+If a backend is introduced, use:
+
+* HTTPS
+* Secure password hashing
+* Session/token security
+* Server-side authorization
+* Parameterized database queries
+* Rate limiting
+* Proper CORS configuration
+
+---
+
+# 56. Settings
+
+Create a Settings page with:
+
+### General
+
+* Plant name
+* Plant location
+* Time zone
+* Currency
+
+### Delivery
+
+* Delay thresholds
+* Status definitions
+
+### Delay Reasons
+
+* Add
+* Edit
+* Disable
+* Reorder
+
+### Targets
+
+* On-time target
+* Average delay target
+* Severe delay threshold
+
+### Users
+
+* User management
+
+---
+
+# 57. UI Components
+
+Create reusable components:
+
+* Sidebar
+* Header
+* KPI Card
+* Status Badge
+* Delay Badge
+* Data Table
+* Filter Bar
+* Date Range Picker
+* Chart Card
+* Metric Card
+* Modal
+* Drawer
+* Timeline
+* Alert Card
+* Empty State
+* Loading Skeleton
+* Toast Notification
+* Confirmation Dialog
+* Form Field
+* Dropdown
+* Tooltip
+
+Maintain consistent component behavior throughout the application.
+
+---
+
+# 58. Color System
+
+Use a professional industrial palette.
+
+Primary:
+
+* Deep navy
+* Engineering blue
+* Cyan accent
+
+Status:
+
+* Green = On time / healthy
+* Amber = Warning
+* Red = Delayed / critical
+* Neutral gray = inactive / informational
+
+Do not overuse colors.
+
+The primary dashboard should remain visually calm.
+
+---
+
+# 59. Navigation Structure
+
+Sidebar:
+
+```text
+OVERVIEW
+
+Operations Overview
+Live Deliveries
+Alerts
+
+OPERATIONS
+
+Deliveries
+Projects
+Customers
+Fleet
+Plant Operations
+
+ANALYTICS
+
+Performance
+Delay Analysis
+Trends
+Reports
+
+SYSTEM
+
+Data Import
+Audit Log
+Settings
+```
+
+Display the logged-in user's role and profile at the bottom.
+
+---
+
+# 60. Dashboard Header Example
+
+Use:
+
+**Good morning, Operations Team**
+
+**Peliyagoda Plant**
+
+`Friday, October 2, 2026`
+
+Then:
+
+`Operations are currently within normal monitoring range`
+
+Do not make unsupported claims about actual plant status. For demo mode, label the status as demo-generated.
+
+---
+
+# 61. Sample Dashboard Layout
+
+Desktop:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ Sidebar │ Header                                  │ Profile │
+├─────────┴───────────────────────────────────────────────────┤
+│                                                             │
+│ Operations Overview                      Date: Last 30 Days │
+│                                                             │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────────┐ │
+│ │Deliver │ │On Time │ │Avg     │ │Late    │ │Severe      │ │
+│ │ 248    │ │ 84.7%  │ │18 min  │ │ 38     │ │ 11         │ │
+│ └────────┘ └────────┘ └────────┘ └────────┘ └────────────┘ │
+│                                                             │
+│ ┌─────────────────────────────────┐ ┌─────────────────────┐ │
+│ │ Delivery Delay Trend            │ │ Delivery Status     │ │
+│ │                                 │ │                     │ │
+│ │             LINE CHART          │ │     DONUT CHART     │ │
+│ │                                 │ │                     │ │
+│ └─────────────────────────────────┘ └─────────────────────┘ │
+│                                                             │
+│ ┌─────────────────────────────────┐ ┌─────────────────────┐ │
+│ │ Delay Reasons                   │ │ Delay by Stage      │ │
+│ │                                 │ │                     │ │
+│ │ HORIZONTAL BAR CHART            │ │ STACKED CHART       │ │
+│ └─────────────────────────────────┘ └─────────────────────┘ │
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ Active Deliveries / Exceptions                         │ │
+│ │                                                         │ │
+│ │ Order │ Project │ Truck │ ETA │ Delay │ Status         │ │
+│ └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 62. Important UX Principle
+
+The system should follow this hierarchy:
+
+### Level 1
+
+**What is happening?**
+
+KPIs and status.
+
+### Level 2
+
+**Where is the problem?**
+
+Stage, project, truck, time period.
+
+### Level 3
+
+**Why is it happening?**
+
+Delay reason analysis.
+
+### Level 4
+
+**Which specific deliveries are responsible?**
+
+Drill-down.
+
+### Level 5
+
+**What should management investigate?**
+
+Operational insights and exceptions.
+
+This hierarchy is more important than simply adding more charts.
+
+---
+
+# 63. Prototype Requirements
+
+The first implementation must be fully functional without requiring a backend.
+
+Use:
+
+* React
+* TypeScript
+* CSS/Tailwind
+* Chart.js or Recharts
+* Local Storage
+* CSV import/export
+
+Include a demo dataset.
+
+Every dashboard number must be calculated from the underlying delivery records.
+
+Do not hardcode KPI values.
+
+For example, if the dataset contains 248 records, calculate:
+
+```text
+totalDeliveries = deliveries.length
+```
+
+Calculate on-time performance from actual records.
+
+Calculate average delay from actual calculated delivery delays.
+
+Calculate delay reason statistics dynamically.
+
+---
+
+# 64. Code Quality
+
+Use:
+
+* TypeScript interfaces/types
+* Reusable components
+* Separation of UI and business logic
+* Utility functions for calculations
+* Centralized configuration
+* Clean folder structure
+* Meaningful variable names
+* No duplicated business logic
+* No unnecessary dependencies
+
+Suggested structure:
+
+```text
+src/
+├── components/
+├── pages/
+├── layouts/
+├── charts/
+├── forms/
+├── tables/
+├── data/
+├── services/
+├── utils/
+├── types/
+├── hooks/
+├── config/
+└── App.tsx
+```
+
+Create reusable analytics functions:
+
+```text
+calculateDeliveryDelay()
+calculateOnTimePercentage()
+calculateAverageDelay()
+calculateDelayByReason()
+calculateDelayByStage()
+calculateDailyTrend()
+calculateProjectPerformance()
+calculateTruckPerformance()
+calculatePlantPerformance()
+```
+
+---
+
+# 65. Final Quality Requirements
+
+Before considering the application complete, verify:
+
+* No broken routes
+* No console errors
+* No fake KPI calculations
+* No hardcoded analytics
+* CSV import works
+* CSV export works
+* Data persists after refresh
+* Filters work
+* Charts update with filters
+* Delivery creation works
+* Delivery editing works
+* Delivery deletion requires confirmation
+* Validation works
+* Date calculations are accurate
+* Time-zone handling is consistent
+* Responsive layout works
+* Empty states work
+* Loading states work
+* Error states work
+* Demo data can be reset
+* No API keys are exposed
+* No production credentials are included
+
+---
+
+# 66. Final Product Positioning
+
+The completed project should feel like:
+
+**A lightweight operational intelligence platform for ready-mix concrete delivery operations.**
+
+It should demonstrate more than frontend development.
+
+The project should showcase:
+
+* Business problem analysis
+* Data modeling
+* Operational analytics
+* KPI design
+* Data visualization
+* Workflow design
+* Exception monitoring
+* Role-based system architecture
+* Data validation
+* Reporting
+* Security considerations
+* Scalable software architecture
+
+The final experience should communicate this concept:
+
+> **From delivery records to operational intelligence.**
+
+Do not make the application look like a university CRUD project.
+
+It should look like a realistic internal enterprise application that a concrete plant could potentially use to monitor its delivery operations.
